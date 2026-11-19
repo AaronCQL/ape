@@ -21,20 +21,9 @@ func Set(env Env, args []string) error {
 	if err != nil {
 		return err
 	}
-	var keys, values, pairs []string
-	for _, a := range args[1:] {
-		k, v, ok := strings.Cut(a, "=")
-		if !ok {
-			return usageErr(setUsage, "%q isn't k=v", a)
-		}
-		if !slices.Contains(task.Keys, k) {
-			return fail(ExitUsage, "unknown key %q; keys are %s", k, strings.Join(task.Keys, " "))
-		}
-		v = oneLine(v)
-		if nums, ok := task.NeedsNums(v); ok && k == "needs" {
-			v = task.JoinIDs(nums) // "3 t5" → "T3 T5": ape writes IDs one way
-		}
-		keys, values, pairs = append(keys, k), append(values, v), append(pairs, k+"="+v)
+	labels, err := parseLabels(args[1:], setUsage)
+	if err != nil {
+		return err
 	}
 	return withLock(env, func() error {
 		c, err := findTask(env, n)
@@ -53,20 +42,14 @@ func Set(env Env, args []string) error {
 		if c, err = task.Parse(c.Path, read); err != nil {
 			return fail(ExitUsage, "%s is unreadable: %v; fix the file by hand", task.ID(n), err)
 		}
-		for i, k := range keys {
+		for _, l := range labels {
 			// Triage is a claim: another agent's set status=triage on a task in triage loses.
-			if k == "status" && values[i] == "triage" && c.Get("status") == "triage" {
+			if l.Key == "status" && l.Value == "triage" && c.Get("status") == "triage" {
 				return fail(ExitConflict, "%s is already in triage", task.ID(n))
 			}
-			c.Set(k, values[i])
 		}
-		if err := checkValues(c); err != nil {
+		if err := applyLabels(env, c, labels); err != nil {
 			return err
-		}
-		if slices.Contains(keys, "needs") {
-			if err := checkNeeds(env, c); err != nil {
-				return err
-			}
 		}
 		// After the read: an edit landing in between goes into this commit and fails the check below, instead of
 		// being folded into set's commit.
@@ -79,6 +62,10 @@ func Set(env Env, args []string) error {
 		}
 		if err := writeTask(c); err != nil {
 			return err
+		}
+		pairs := make([]string, len(labels))
+		for i, l := range labels {
+			pairs[i] = l.Key + "=" + l.Value
 		}
 		msg := subject("set", n, strings.Join(pairs, " "))
 		if err := apeRepo(env).Commit(msg, relPath(env, c.Path)); err != nil {
@@ -97,6 +84,44 @@ func Set(env Env, args []string) error {
 
 // setRead runs between set reading the task and checking it's unchanged; tests make a hand edit there.
 var setRead = func() {}
+
+// parseLabels parses k=v arguments (set's and new's): known keys only; a value is made one line, needs IDs written
+// as ape writes them ("3 t5" → "T3 T5").
+func parseLabels(args []string, usage string) ([]task.Field, error) {
+	var labels []task.Field
+	for _, a := range args {
+		k, v, ok := strings.Cut(a, "=")
+		if !ok {
+			return nil, usageErr(usage, "%q isn't k=v", a)
+		}
+		if !slices.Contains(task.Keys, k) {
+			return nil, fail(ExitUsage, "unknown key %q; keys are %s", k, strings.Join(task.Keys, " "))
+		}
+		v = oneLine(v)
+		if nums, ok := task.NeedsNums(v); ok && k == "needs" {
+			v = task.JoinIDs(nums)
+		}
+		labels = append(labels, task.Field{Key: k, Value: v})
+	}
+	return labels, nil
+}
+
+// applyLabels sets labels on c, then refuses values outside their sets (checkValues) and, if needs was given, a
+// needs that names c, a closed task or a loop (checkNeeds). Nothing is written.
+func applyLabels(env Env, c *task.Task, labels []task.Field) error {
+	needs := false
+	for _, l := range labels {
+		c.Set(l.Key, l.Value)
+		needs = needs || l.Key == "needs"
+	}
+	if err := checkValues(c); err != nil {
+		return err
+	}
+	if needs {
+		return checkNeeds(env, c)
+	}
+	return nil
+}
 
 // checkValues rejects a task whose kind, status, pri, excl or needs holds a value outside its set (SPEC.md "Task
 // file"). The rest of Check (missing keys, combinations) are warnings: set builds a task up one key at a time.

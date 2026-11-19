@@ -14,7 +14,7 @@ const usage = `ape: a task board + project memory for AI agents, in ape/ (markdo
 https://github.com/AaronCQL/ape
 usage:
   ape                          board
-  ape new <slug> [--kind k] [--from who@sha] [--title "…"]
+  ape new <slug> [--title "…"] [k=v...]   body on stdin
   ape set <id> k=v...
   ape start <id>
   ape pause <id>
@@ -54,6 +54,10 @@ func run(args []string) int {
 		return fail(err)
 	}
 	env := commands.Env{Cwd: cwd, Out: os.Stdout}
+	// Not a terminal or /dev/null: a heredoc, a pipe, a file.
+	if fi, err := os.Stdin.Stat(); err == nil && fi.Mode()&os.ModeCharDevice == 0 {
+		env.In = os.Stdin
+	}
 	if sub != "init" {
 		if env.ApeDir, env.MainRoot, err = locate.Find(cwd); err != nil {
 			return fail(&commands.Error{Code: commands.ExitNotFound,

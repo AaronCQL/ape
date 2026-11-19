@@ -53,7 +53,7 @@ the rest; DECISIONS.md empty (candidate decisions → questions), questions (ste
    - open work (in progress, planned, waiting on something), reproduced bugs → tasks; a long plan: a task per step
      of the next stage, one per later stage (split when it's next). A tracker (in-repo or forge) stays the backlog,
      its priorities and others' PRs too; PROJECT.md says where next is, how an item is taken on and closed; tasks
-     only for work taken on, citing its ID (`--from gh#91`); never mirror it.
+     only for work taken on, citing its ID (`from=gh#91`); never mirror it.
    - questions answerable now → owner tasks (_FRAMEWORK.md, Owner), all filed together; a default already in
      effect → also a `prov:` decision. Work goes on. Deferred to a later stage → not owner tasks (nobody can answer
      them yet): they stay in a doc that stays, else go to that stage's task (many → ref/); the stage's task cites

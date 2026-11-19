@@ -102,9 +102,9 @@ Exactly the format in `_FRAMEWORK.md`'s example:
 
 ### new
 
-`ape new <slug> [--kind k] [--from who@sha] [--title "…"]`
+`ape new <slug> [--title "…"] [k=v…]`
 
-Validate slug. Under the lock: number = `.next` (a file in the ape dir holding one integer; if missing, 1 + the max number in tasks/ and in every `tasks/*` path in the ape repo's history, a name's leading ID read as typed). Write `tasks/Tn-slug.md` with header `kind` (if given), `status: new`, `from` (if given), then `# <title or slug with dashes as spaces>`, blank line. Write `.next` = number+1. Commit `new(Tn): <title>`. Print the task path.
+Arguments with `=` are labels, parsed as set's (known keys, one-line values, needs IDs rewritten); `--kind k`, `--from x` = `kind=k`, `from=x` (the form before labels), given first. Validate slug. Body: stdin when it's a pipe or a file (not a terminal or `/dev/null`), read before the lock; leading blank lines dropped, ends in one newline; only whitespace = none. Under the lock: number = `.next` (a file in the ape dir holding one integer; if missing, 1 + the max number in tasks/ and in every `tasks/*` path in the ape repo's history, a name's leading ID read as typed). The task: header `status: new`, then the labels applied as set applies them (same value and needs checks, exit as set's), `# <title or slug with dashes as spaces>`, blank line, body. Any CHECK problem of its own (`ready without pri`, …): exit 1 `<problems, comma-joined>; give the labels it lacks, or file it as status new`. Nothing is written before these pass. Write `tasks/Tn-slug.md` and `.next` = number+1. Commit `new(Tn): <title>`. Print the task path.
 
 ### set
 

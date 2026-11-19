@@ -34,13 +34,14 @@ from: <who>@<sha> | <tracker ref>          # where it came from, if outside ape 
   To the owner (reports, Asks, chat): ID + what it is, never bare: "T31 (`needs` can't hold owner + Tn)".
 - A report (bug, request) = a `status: new` task: what happened, repro, workaround; triage makes it ready. Before
   `ape new`, grep ape/tasks for a duplicate.
-- Labels via `ape set`; the `#` comments are docs, not allowed in files.
+- Labels via `ape new`, `ape set`; the `#` comments are docs, not allowed in files.
 
 ## CLI
 
 ```
 ape                          board (below); READY in pick order: pri, then oldest
-ape new <slug> [--kind k] [--from …] [--title "…"]   next ID, status new; prints the path
+ape new <slug> [--title "…"] [k=v…] <<'EOF'   next ID; labels as set, status new unless given; body from stdin
+                             (heredoc); refuses what CHECK would flag; one commit; prints the path
 ape set <id> k=v...          labels: kind=bug pri=1 status=ready area="a/ b/" needs=owner|"T3 T5"; k= deletes.
                              needs: open tasks only, not itself, no loop
 ape start <id>               branch ape/Tn-slug + worktree ../<repo>-wt/Tn-slug + ape/ linked in = the claim;
@@ -123,8 +124,8 @@ reserves; their devices, accounts, money; work against DECISIONS.md or a public 
 main red with no clear culprit; anything blocking ≥ 2 tasks. Not: choices that end with the task; bugs with a clear
 fix (file them).
 - Blocks the task → in its file: `## Ask`, `ape set Tn status=blocked needs=owner`.
-- Else, or a second question → `ape new <slug> --kind owner` (Tm), `## Ask`, `ape set Tm pri=… status=ready`; a
-  decision's `rec` holds meanwhile as a `prov:` Dn. Work goes on.
+- Else, or a second question → `ape new <slug> kind=owner pri=… status=ready`, body `## Ask` (Tm); a decision's
+  `rec` holds meanwhile as a `prov:` Dn. Work goes on.
 - Answered → where it takes effect (DECISIONS, tasks, ref/, what cites the task; a code-repo doc → a task); `## Ask`
   removed; `ape commit -m "owner(Tn or Tm): <what was decided>" <paths>`; then `ape set Tn status=ready needs=`, or
   `ape done Tm "<answer>"` (also when the owner did the work; releases the tasks that need Tm).

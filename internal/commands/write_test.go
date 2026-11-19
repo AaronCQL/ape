@@ -409,6 +409,51 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestNewLabelsAndBody(t *testing.T) {
+	env := project(t)
+	run(t, env, New, "dep")
+	env.In = strings.NewReader("\nWhat happened.\n## Ask\nShip it? rec: yes.\n\n")
+	run(t, env, New, "flaky", "--title", "Flaky login", "pri=2", "kind=bug", "area=auth/  web/", "status=blocked",
+		"needs=1")
+	want := "---\nkind: bug\npri: 2\nstatus: blocked\narea: auth/ web/\nneeds: T1\n---\n# Flaky login\n\n" +
+		"What happened.\n## Ask\nShip it? rec: yes.\n"
+	if got := readFile(t, taskPath(env, "T2-flaky.md")); got != want {
+		t.Errorf("task:\n%s", got)
+	}
+	if got := subjects(t, env)[:2]; got[0] != "new(T2): Flaky login" || got[1] != "new(T1): dep" {
+		t.Errorf("commits %q", got)
+	}
+	if got := mustGit(t, env.ApeDir, "status", "--porcelain"); got != "" {
+		t.Errorf("ape repo dirty: %q", got)
+	}
+	env.In = strings.NewReader(" \n")
+	run(t, env, New, "blank", "--kind", "chore", "kind=feat")
+	if got := readFile(t, taskPath(env, "T3-blank.md")); got != "---\nkind: feat\nstatus: new\n---\n# blank\n\n" {
+		t.Errorf("task:\n%s", got)
+	}
+
+	env.In = nil
+	for _, c := range []struct {
+		code int
+		msg  string
+		args []string
+	}{
+		{ExitUsage, "unknown key", []string{"x", "prio=1"}},
+		{ExitUsage, "bad pri", []string{"x", "pri=4"}},
+		{ExitUsage, "ready without pri, ready without area", []string{"x", "kind=bug", "status=ready"}},
+		{ExitUsage, "needs on a task that isn't blocked", []string{"x", "needs=T1"}},
+		{ExitNotFound, "no T9", []string{"x", "status=blocked", "needs=T9"}},
+		{ExitUsage, "can't need itself", []string{"x", "status=blocked", "needs=T4"}},
+	} {
+		if msg := wantCode(t, env, c.code, New, c.args...); !strings.Contains(msg, c.msg) {
+			t.Errorf("%q: %q lacks %q", c.args, msg, c.msg)
+		}
+	}
+	if got := readFile(t, filepath.Join(env.ApeDir, ".next")); got != "4\n" {
+		t.Errorf("refused new changed .next: %q", got)
+	}
+}
+
 func TestNewNeverReuses(t *testing.T) {
 	env := project(t)
 	for _, s := range []string{"a", "b", "c"} {

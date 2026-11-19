@@ -14,6 +14,7 @@ type Env struct {
 	ApeDir   string // resolved; "" for init
 	MainRoot string // "" for init
 	Out      io.Writer
+	In       io.Reader // stdin if it's a pipe or a file (new reads a task's body from it), else nil
 }
 
 // Exit codes (SPEC.md "Writes").

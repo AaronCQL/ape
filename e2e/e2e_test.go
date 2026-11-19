@@ -983,3 +983,20 @@ exec "$REAL_GIT" "$@"
 		})
 	}
 }
+
+// A heredoc is the task's body; /dev/null (every other test's stdin) is none (T33).
+func TestNewBodyFromStdin(t *testing.T) {
+	root := project(t)
+	script := apeBin + " new login-timeout --title 'Login times out' kind=bug pri=2 'area=auth/' status=ready <<'EOF'\n" +
+		"Repro: log in, wait 5 min.\nEOF\n"
+	if r := run(t, root, nil, "bash", "-c", script); r.code != 0 || r.stderr != "" {
+		t.Fatalf("ape new with a heredoc:\n%s", r)
+	}
+	want := "---\nkind: bug\npri: 2\nstatus: ready\narea: auth/\n---\n# Login times out\n\nRepro: log in, wait 5 min.\n"
+	if got := read(t, filepath.Join(root, "ape", "tasks", "T1-login-timeout.md")); got != want {
+		t.Errorf("task:\n%s", got)
+	}
+	if got := subjects(t, root)[0]; got != "new(T1): Login times out" {
+		t.Errorf("commit %q", got)
+	}
+}

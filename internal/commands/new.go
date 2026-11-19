@@ -3,10 +3,10 @@ package commands
 import (
 	"errors"
 	"flag"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -14,42 +14,59 @@ import (
 	"github.com/AaronCQL/ape/internal/task"
 )
 
-const newUsage = `ape new <slug> [--kind k] [--from who@sha] [--title "…"]`
+const newUsage = `ape new <slug> [--title "…"] [k=v…] (keys as ape set; body on stdin)`
 
 // New runs `ape new` with its arguments (after the subcommand name). See SPEC.md.
 func New(env Env, args []string) error {
 	fset := flag.NewFlagSet("new", flag.ContinueOnError)
-	kind := fset.String("kind", "", "")
+	kind := fset.String("kind", "", "") // = kind=…, from=…: the forms before labels
 	from := fset.String("from", "", "")
 	title := fset.String("title", "", "")
 	pos, err := parseArgs(fset, args, newUsage)
 	if err != nil {
 		return err
 	}
-	if len(pos) != 1 {
-		return usageErr(newUsage, "want one slug, got %d arguments", len(pos))
+	var slugs, kvs []string
+	for _, a := range pos {
+		if strings.Contains(a, "=") {
+			kvs = append(kvs, a)
+		} else {
+			slugs = append(slugs, a)
+		}
 	}
-	slug := pos[0]
+	if len(slugs) != 1 {
+		return usageErr(newUsage, "want one slug, got %d arguments", len(slugs))
+	}
+	slug := slugs[0]
 	if !task.ValidSlug(slug) {
 		return fail(ExitUsage, "bad slug %q; use lowercase letters and digits, words joined by single dashes", slug)
 	}
-	if *kind != "" && !slices.Contains(task.Kinds, *kind) {
-		return fail(ExitUsage, "bad kind %q; kind is one of %s", *kind, strings.Join(task.Kinds, " "))
+	var labels []task.Field
+	if *kind != "" {
+		labels = append(labels, task.Field{Key: "kind", Value: *kind})
 	}
+	if *from != "" {
+		labels = append(labels, task.Field{Key: "from", Value: *from})
+	}
+	more, err := parseLabels(kvs, newUsage)
+	if err != nil {
+		return err
+	}
+	labels = append(labels, more...)
 	t := oneLine(*title)
 	if t == "" {
 		t = strings.ReplaceAll(slug, "-", " ")
 	}
-	var b strings.Builder
-	b.WriteString("---\n")
-	if *kind != "" {
-		b.WriteString("kind: " + *kind + "\n")
+	text := "---\nstatus: new\n---\n# " + t + "\n\n"
+	if env.In != nil { // before the lock: a slow writer mustn't hold up other ape commands
+		body, err := io.ReadAll(env.In)
+		if err != nil {
+			return err
+		}
+		if b := strings.TrimLeft(string(body), "\r\n"); strings.TrimSpace(b) != "" {
+			text += strings.TrimRight(b, "\r\n") + "\n"
+		}
 	}
-	b.WriteString("status: new\n")
-	if f := oneLine(*from); f != "" {
-		b.WriteString("from: " + f + "\n")
-	}
-	b.WriteString("---\n# " + t + "\n\n")
 
 	return withLock(env, func() error {
 		n, err := nextNumber(env)
@@ -57,6 +74,17 @@ func New(env Env, args []string) error {
 			return err
 		}
 		path := filepath.Join(tasksDir(env), task.FileName(n, slug))
+		c, err := task.Parse(path, []byte(text))
+		if err != nil {
+			return err
+		}
+		if err := applyLabels(env, c, labels); err != nil {
+			return err
+		}
+		// Unlike set, which builds a task up one label at a time, new files it whole: no CHECK problem.
+		if ps := c.Check(); len(ps) > 0 {
+			return fail(ExitUsage, "%s; give the labels it lacks, or file it as status new", strings.Join(ps, ", "))
+		}
 		if err := os.MkdirAll(tasksDir(env), 0o755); err != nil {
 			return err
 		}
@@ -64,7 +92,7 @@ func New(env Env, args []string) error {
 		if err != nil {
 			return err
 		}
-		_, err = f.WriteString(b.String())
+		_, err = f.Write(c.Bytes())
 		if cerr := f.Close(); err == nil {
 			err = cerr
 		}
