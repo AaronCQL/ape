@@ -125,7 +125,8 @@ Ask (err toward asking): a lasting decision (one DECISIONS.md would hold) PROJEC
 reserves; their devices, accounts, money; work against DECISIONS.md or a public ADR, or bigger than the task's goal;
 main red with no clear culprit; anything blocking ≥ 2 tasks. Not: choices that end with the task; bugs with a clear
 fix (file them).
-- Blocks the task → in its file: `## Ask`, `ape set Tn status=blocked needs=owner`.
+- Blocks the task → in its file: `## Ask`, `ape set Tn status=blocked needs=owner`. Also waits on tasks → the
+  question as an owner task Tm (below), `needs="Tm T5"`.
 - Else, or a second question → `ape new <slug> kind=owner pri=… status=ready`, body `## Ask` (Tm); a decision's
   `rec` holds meanwhile as a `prov:` Dn. Work goes on.
 - Answered → where it takes effect (DECISIONS, tasks, ref/, what cites the task; a code-repo doc → a task); `## Ask`
