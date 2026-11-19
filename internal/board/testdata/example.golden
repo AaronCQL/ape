@@ -1,0 +1,17 @@
+ape: 7 tasks · 2 owner · 1 doing · 1 new · 0 blocked · 3 ready · 1 done 24h
+OWNER
+  T3   owner p1  Approve the pricing page copy
+       ? Ship the shorter copy? rec: yes; the long one tested worse.
+  T7   feat  p2  Export to CSV   [needs owner]
+DOING
+  T4   feat  p1  OAuth login   [12m since commit; conflicts main: auth/session.go]
+NEW
+  T11  bug       Dark mode flickers on load   [from web@3f2a9c1]
+READY
+  T5   bug   p1  Session expires early
+  T9   chore p2  Upgrade the test runner   [conflicts T4: go.mod; paused]
+  T12  chore p3  Split auth/ into packages   [clashes T4]
+DONE 24h
+  T2   done  signup form + validation; e2e green (code 8c1d2e4)
+CHECK
+  ape/T31-foo: branch without a task

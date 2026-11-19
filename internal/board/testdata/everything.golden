@@ -1,0 +1,42 @@
+ape: 20 tasks · 5 owner · 5 doing · 3 new · 3 blocked · 4 ready · 3 done 24h
+OWNER
+  T1   owner p1  Pick a database
+       ? Postgres or SQLite? rec: SQLite.
+  T4   feat  p1  Payments   [doing]
+       ? Stripe or Paddle? Stripe has the better API and docs, Paddle handles VAT as merchant of record. rec: Stripe, s…
+  T3   feat  p2  Billing   [needs owner]
+  T5   feat  p2  Invoices   [needs owner; doing]
+  T2   owner     Buy the domain   [needs owner]
+DOING
+  T6   owner p1  Sign the contract   [1h since commit]
+  T10  feat  p1  Login   [5m since commit; conflicts main in regenerated files only: corpus/a/expected.txt]
+  T11  feat  p2  Search   [26h since commit; conflicts main: a, b, c, +1 more]
+  T12  chore p3  Stale thing   [3d since commit]
+  T13            Unlabelled work   [no commits]
+NEW
+  T20  bug       Crash on save   [from app@1234567]
+  T21  bug       Slow start   [triage]
+  T22  bug       Odd status
+BLOCKED
+  T30  feat  p2  Reports   [needs T11]
+  T32  feat  p2  Launch   [needs T10 T30]
+  T31  feat  p3  Exports   [needs T99 (gone)]
+READY
+  T40  bug   p1  Session fix   [clashes T10, T11]
+  T41  spike p2  Resume me   [conflicts T11: search/index.go, ui/list.go; paused]
+  T43  feat  p2  Refunds
+  T42  feat      Nav polish
+DONE 24h
+  T5   done  signup form + validation (code 8c1d2e4)
+  T6   drop  dup of T20
+  T7   done  CSV and JSON importers, streaming, 40 MB in 1.2 s, round-trip tests green; left: XLSX and the progress bar…
+CHECK
+  T22: status later not in new, triage, ready, blocked
+  todo.md: bad filename
+  ape/T50-orphan: worktree without a task
+  ape/T51-gone: branch without a task
+  T11: quiet 26h (worktree, no commit)
+  T12: quiet 3d (worktree, no commit)
+  T13: quiet 4h (no commits since start)
+  T31: needs T99, dropped; ape set T31 needs=… (what replaces it), or drop T31
+  _FRAMEWORK.md: outdated; run ape init
