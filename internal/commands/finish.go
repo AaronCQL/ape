@@ -10,11 +10,13 @@ import (
 )
 
 // finish is done and drop: task n's branch (if any) and any detached worktree of it must be merged into the main
-// root's HEAD (gitx.Merged: squash merges count), unless force, and its worktrees clean; only then do its worktrees, its branch and the task go, in
-// one ape commit "<verb>(T12): <text>[ (code <sha>)]", after one "edit(T12): hand edits" of the task's pending hand edits,
-// if any. done also releases the tasks that need n, in that same commit (release); drop leaves them blocked and names
-// them. A refusal leaves everything as it was.
-func finish(env Env, verb string, n int, text string, force bool) error {
+// root's HEAD (gitx.Merged: squash merges count), unless force, and its worktrees clean; only then do its worktrees,
+// its branch and the task go, in one ape commit "<verb>(T12): <text>[ (code <sha>)]", after one "edit(T12): hand
+// edits" of the task's pending hand edits, if any. code (done --code) is the commit that merged the task: it must be
+// in the main root's HEAD, stands for the branch's merge check, and is the sha recorded (else HEAD's, with a branch).
+// done also releases the tasks that need n, in that same commit (release); drop leaves them blocked and names them.
+// A refusal leaves everything as it was.
+func finish(env Env, verb string, n int, text string, force bool, code string) error {
 	c, err := findTask(env, n)
 	if err != nil {
 		return err
@@ -23,21 +25,34 @@ func finish(env Env, verb string, n int, text string, force bool) error {
 	if err != nil {
 		return err
 	}
-	code := codeRepo(env)
+	repo := codeRepo(env)
 	branch := w.Branch()
 	var head string
-	if branch != "" || len(w.Worktrees) > 0 {
-		if head, err = code.Head(); err != nil {
+	if branch != "" || len(w.Worktrees) > 0 || code != "" {
+		if head, err = repo.Head(); err != nil {
 			return err
 		}
 	}
-	into := mainBranch(code)
-	sha, err := tip(code, branch)
+	into := mainBranch(repo)
+	if code != "" {
+		given := code
+		if code, err = repo.Run("rev-parse", "--verify", "-q", code+"^{commit}"); err != nil {
+			return fail(ExitUsage, "--code %s isn't a commit in the code repo", given)
+		}
+		in, err := repo.IsAncestor(code, head)
+		if err != nil {
+			return err
+		}
+		if !in {
+			return fail(ExitUsage, "--code %s isn't in %s; name the commit that merged %s", given, into, task.ID(n))
+		}
+	}
+	sha, err := tip(repo, branch)
 	if err != nil {
 		return err
 	}
-	if branch != "" && !force {
-		merged, err := code.Merged(sha, head)
+	if branch != "" && !force && code == "" {
+		merged, err := repo.Merged(sha, head)
 		if err != nil {
 			return err
 		}
@@ -61,25 +76,28 @@ func finish(env Env, verb string, n int, text string, force bool) error {
 
 	var gone []string // what went besides the task, for the output
 	for _, wt := range w.Worktrees {
-		if err := removeWorktree(code, wt, force); err != nil {
+		if err := removeWorktree(repo, wt, force); err != nil {
 			return err
 		}
 		gone = append(gone, "worktree "+wt.Path)
 	}
-	suffix := ""
 	if branch != "" {
 		// At the commit checked above: a commit made to it since fails this instead of being lost.
-		if err := code.DeleteBranchAt(branch, sha); err != nil {
+		if err := repo.DeleteBranchAt(branch, sha); err != nil {
 			return err
 		}
 		gone = append(gone, "branch "+branch)
-		if verb == "done" {
-			short, err := code.Run("rev-parse", "--short", head)
-			if err != nil {
-				return err
-			}
-			suffix = " (code " + short + ")"
+		if verb == "done" && code == "" {
+			code = head
 		}
+	}
+	suffix := ""
+	if code != "" {
+		short, err := repo.Run("rev-parse", "--short", code)
+		if err != nil {
+			return err
+		}
+		suffix = " (code " + short + ")"
 	}
 	// Last, so that a refusal commits nothing and a hand edit has the least time to land after it and be lost.
 	if err := commitEdits(env, c); err != nil {

@@ -12,5 +12,5 @@ func Drop(env Env, args []string) error {
 	if err != nil {
 		return err
 	}
-	return withLock(env, func() error { return finish(env, "drop", n, reason, *force) })
+	return withLock(env, func() error { return finish(env, "drop", n, reason, *force, "") })
 }

@@ -1,16 +1,27 @@
 package commands
 
-import "flag"
+import (
+	"flag"
+	"regexp"
+)
 
-const doneUsage = `ape done <id> "<summary>"`
+const doneUsage = `ape done <id> "<summary>" [--code <sha>]`
+
+// codeSuffix is the "(code <sha>)" done appends; a summary ending in one would record it twice.
+var codeSuffix = regexp.MustCompile(`\(code [^()]*\)$`)
 
 // Done runs `ape done` with its arguments (after the subcommand name). See SPEC.md.
 func Done(env Env, args []string) error {
-	n, summary, err := numAndText(flag.NewFlagSet("done", flag.ContinueOnError), args, doneUsage, "summary")
+	fs := flag.NewFlagSet("done", flag.ContinueOnError)
+	code := fs.String("code", "", "")
+	n, summary, err := numAndText(fs, args, doneUsage, "summary")
 	if err != nil {
 		return err
 	}
-	return withLock(env, func() error { return finish(env, "done", n, summary, false) })
+	if codeSuffix.MatchString(summary) {
+		return fail(ExitUsage, "summary ends in (code …); done adds it: give the sha as --code <sha>")
+	}
+	return withLock(env, func() error { return finish(env, "done", n, summary, false, *code) })
 }
 
 // numAndText parses `<id> "<text>"` plus fs's flags; text is made one line and must not be empty.

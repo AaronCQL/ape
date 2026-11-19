@@ -18,7 +18,7 @@ usage:
   ape set <id> k=v...
   ape start <id>
   ape pause <id>
-  ape done <id> "<summary>"
+  ape done <id> "<summary>" [--code <sha>]
   ape drop <id> "<reason>" [--force]
   ape commit -m "<msg>" <paths…>
   ape init

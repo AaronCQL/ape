@@ -47,9 +47,10 @@ ape set <id> k=v...          labels: kind=bug pri=1 status=ready area="a/ b/" ne
 ape start <id>               branch ape/Tn-slug + worktree ../<repo>-wt/Tn-slug + ape/ linked in = the claim;
                              resumes a paused branch. Refuses: taken, not ready, needs set, kind owner
 ape pause <id>               remove the worktree (refuses uncommitted changes); branch kept
-ape done <id> "<summary>"    delete task, worktree, branch (must be merged); commit `done(Tn): <summary> (code
-                             <sha>)`; summary = what, measured, left. Releases what needed it: Tn out of their
-                             needs; none left + blocked → ready; prints `released: T7 T8`
+ape done <id> "<summary>" [--code <sha>]   delete task, worktree, branch (must be merged; --code = the commit on
+                             main that merged it, edited or not); commit `done(Tn): <summary> (code <sha>)`, sha =
+                             --code, else main's HEAD; summary = what, measured, left. Releases what needed it: Tn
+                             out of their needs; none left + blocked → ready; prints `released: T7 T8`
 ape drop <id> "<reason>"     delete task, worktree, branch; commit `drop(Tn): <reason>`; unmerged work → --force.
                              What needed it stays blocked; CHECK `T7: needs Tn, dropped` → point it elsewhere
 ape commit -m "<msg>" <paths…>   commit exactly these ape/ files (new, edited, deleted); prints the sha. A path not
@@ -102,7 +103,7 @@ CHECK
    regenerate after merging); squash-merge into main, one commit per task: `type(scope): what`
    (Conventional Commits; scope = the domain: `feat(compiler): …`), why in the body, no `ape/` branch name
    (PROJECT.md may choose another merge or format); checks green; push if PROJECT.md says; `ape done Tn "<what,
-   measured, left>"` (releases what needed it).
+   measured, left>" --code <merge sha>` (releases what needed it).
 5. Hand-off reported → `ape pause Tn`.
 
 Owner's "do Tn": you're orchestrator and agent; `ape start Tn`. Owner asks for work with no task: done this

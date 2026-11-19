@@ -633,6 +633,44 @@ func TestDoneMergedBranchNoWorktree(t *testing.T) {
 	}
 }
 
+// A squash merge edited at merge time isn't merged by the tree check; --code names it, and is the sha recorded
+// though HEAD moved past it (T34).
+func TestDoneCode(t *testing.T) {
+	env := project(t)
+	run(t, env, New, "edited")
+	wt := startT(t, env, "T1-edited")
+	commitIn(t, wt, "a.go")
+	mustGit(t, env.MainRoot, "merge", "-q", "--squash", "ape/T1-edited")
+	writeFile(t, filepath.Join(env.MainRoot, "a.go"), "edited at merge\n")
+	mustGit(t, env.MainRoot, "commit", "-q", "-am", "squash")
+	squash := mustGit(t, env.MainRoot, "rev-parse", "--short", "HEAD")
+	commitIn(t, env.MainRoot, "later.go")
+	other := mustGit(t, env.MainRoot, "rev-parse", "HEAD")
+
+	wantCode(t, env, ExitConflict, Done, "1", "ok")
+	for _, args := range [][]string{
+		{"1", "ok", "--code", "nope"},
+		{"1", "ok", "--code", mustGit(t, env.MainRoot, "rev-parse", "ape/T1-edited")}, // squashed: not in main
+		{"1", "ok (code " + squash + ")"},
+	} {
+		wantCode(t, env, ExitUsage, Done, args...)
+	}
+	run(t, env, Done, "1", "ok", "--code", squash)
+	if got := subjects(t, env)[0]; got != "done(T1): ok (code "+squash+")" {
+		t.Errorf("commit %q", got)
+	}
+	if exists(wt) || mustGit(t, env.MainRoot, "branch", "--list", "ape/*") != "" {
+		t.Error("worktree or branch left")
+	}
+
+	// Without a branch (an ape/-only task, or work done on main), --code is still recorded.
+	run(t, env, New, "onmain")
+	run(t, env, Done, "2", "ok", "--code="+other)
+	if got := subjects(t, env)[0]; got != "done(T2): ok (code "+other[:len(squash)]+")" {
+		t.Errorf("commit %q", got)
+	}
+}
+
 // A squash merge (or a forge's) leaves the branch's tip out of main's history; done and drop take it as merged.
 func TestFinishSquashMerged(t *testing.T) {
 	env := project(t)
