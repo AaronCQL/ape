@@ -7,7 +7,7 @@ import (
 )
 
 // Version is ape's version, written into _FRAMEWORK.md's first line.
-const Version = "v0.5.0"
+const Version = "v0.6.0"
 
 //go:embed _FRAMEWORK.md
 var frameworkMD string
