@@ -11,6 +11,10 @@ import (
 // width is the most columns (runes) an Ask or DONE line takes; longer ones are cut, ending "…".
 const width = 120
 
+// doneShown is how many DONE 24h lines the board shows, newest first; the header counts them all, `git -C ape log`
+// has the rest.
+const doneShown = 5
+
 var colNames = [...]string{Owner: "OWNER", Doing: "DOING", New: "NEW", Blocked: "BLOCKED", Ready: "READY"}
 
 // Render returns the board text exactly as SPEC.md specifies, ending in a newline.
@@ -22,6 +26,8 @@ func Render(b Board) string {
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "ape: %d tasks · %d owner · %d doing · %d new · %d blocked · %d ready · %d done 24h\n",
 		len(b.Rows), n[Owner], n[Doing], n[New], n[Blocked], n[Ready], len(b.Done))
+	// First: the one section that asks for action survives `ape | head`.
+	section(&sb, "CHECK", b.Check, false) // never cut: its lines hold paths and commands to run
 
 	for col, name := range colNames {
 		if n[col] > 0 {
@@ -45,8 +51,11 @@ func Render(b Board) string {
 			}
 		}
 	}
-	section(&sb, "DONE 24h", b.Done, true)
-	section(&sb, "CHECK", b.Check, false) // never cut: its lines hold paths and commands to run
+	done := b.Done
+	if len(done) > doneShown {
+		done = append(done[:doneShown:doneShown], fmt.Sprintf("+%d more", len(b.Done)-doneShown))
+	}
+	section(&sb, "DONE 24h", done, true)
 	return sb.String()
 }
 

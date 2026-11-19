@@ -551,6 +551,7 @@ func TestRenderGolden(t *testing.T) {
 				{Subject: "done(T5): signup form + validation (code 8c1d2e4)"},
 				{Subject: "drop(T6): dup of T20"},
 				{Subject: "done(T7): CSV and JSON importers, streaming, 40 MB in 1.2 s, round-trip tests green; left: XLSX and the progress bar (T44) (code 1a2b3c4)"},
+				{Subject: "done(T8): a"}, {Subject: "done(T9): b"}, {Subject: "done(T14): c"}, // beyond the first 5
 			},
 			Conflicts: map[[2]int]Conflict{
 				{41, 10}: {Files: []string{"corpus/a/expected.txt"}, Regenerated: true},

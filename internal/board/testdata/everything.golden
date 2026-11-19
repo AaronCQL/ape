@@ -1,4 +1,14 @@
-ape: 20 tasks · 5 owner · 5 doing · 3 new · 3 blocked · 4 ready · 3 done 24h
+ape: 20 tasks · 5 owner · 5 doing · 3 new · 3 blocked · 4 ready · 6 done 24h
+CHECK
+  T22: status later not in new, triage, ready, blocked
+  todo.md: bad filename
+  ape/T50-orphan: worktree without a task
+  ape/T51-gone: branch without a task
+  T11: quiet 26h (worktree, no commit)
+  T12: quiet 3d (worktree, no commit)
+  T13: quiet 4h (no commits since start)
+  T31: needs T99, dropped; ape set T31 needs=… (what replaces it), or drop T31
+  _FRAMEWORK.md: outdated; run ape init
 OWNER
   T1   owner p1  Pick a database
        ? Postgres or SQLite? rec: SQLite.
@@ -30,13 +40,6 @@ DONE 24h
   T5   done  signup form + validation (code 8c1d2e4)
   T6   drop  dup of T20
   T7   done  CSV and JSON importers, streaming, 40 MB in 1.2 s, round-trip tests green; left: XLSX and the progress bar…
-CHECK
-  T22: status later not in new, triage, ready, blocked
-  todo.md: bad filename
-  ape/T50-orphan: worktree without a task
-  ape/T51-gone: branch without a task
-  T11: quiet 26h (worktree, no commit)
-  T12: quiet 3d (worktree, no commit)
-  T13: quiet 4h (no commits since start)
-  T31: needs T99, dropped; ape set T31 needs=… (what replaces it), or drop T31
-  _FRAMEWORK.md: outdated; run ape init
+  T8   done  a
+  T9   done  b
+  +1 more

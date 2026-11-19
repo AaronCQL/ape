@@ -71,6 +71,8 @@ ape init                     in the main worktree root: creates ape/ + T1 (set i
 ```
 $ ape
 ape: 7 tasks · 2 owner · 1 doing · 1 new · 0 blocked · 3 ready · 1 done 24h
+CHECK
+  ape/T31-foo: branch without a task
 OWNER
   T3   owner p1  Approve the pricing page copy
        ? Ship the shorter copy? rec: yes; the long one tested worse.
@@ -85,8 +87,6 @@ READY
   T12  chore p3  Split auth/ into packages   [clashes T4]
 DONE 24h
   T2   done  signup form + validation; e2e green (code 8c1d2e4)
-CHECK
-  ape/T31-foo: branch without a task
 ```
 
 ## Orchestrator

@@ -36,6 +36,9 @@ func TestBoard(t *testing.T) {
 	p.git(p.ape, "commit", "-q", "-m", "done(T2): form + validation (code 8c1d2e4)")
 
 	want := `ape: 7 tasks · 1 owner · 1 doing · 1 new · 2 blocked · 2 ready · 1 done 24h
+CHECK
+  ape/T31-foo: branch without a task
+  T13: needs T99: all done; ape set T13 status=ready needs=
 OWNER
   T3   owner p1  Approve the pricing page copy
        ? Ship the shorter copy? rec: yes.
@@ -51,9 +54,6 @@ READY
   T9   chore p2  Upgrade the test runner   [paused]
 DONE 24h
   T2   done  form + validation (code 8c1d2e4)
-CHECK
-  ape/T31-foo: branch without a task
-  T13: needs T99: all done; ape set T13 status=ready needs=
 `
 	if got := p.mustRun(Board); got != want {
 		t.Fatalf("board:\n%s\nwant:\n%s", got, want)
@@ -86,7 +86,7 @@ CHECK
 	fw := filepath.Join(p.ape, "_FRAMEWORK.md")
 	p.write(p.ape, "_FRAMEWORK.md", "old\n")
 	got = p.mustRun(Board)
-	if !strings.Contains(got, "\n  T14: ") || !strings.HasSuffix(got, "\n  _FRAMEWORK.md: outdated; run ape init\n") {
+	if !strings.Contains(got, "\n  T14: ") || !strings.Contains(got, "\n  _FRAMEWORK.md: outdated; run ape init\nOWNER\n") {
 		t.Fatalf("board:\n%s", got)
 	}
 	os.Remove(fw)

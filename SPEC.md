@@ -70,12 +70,12 @@ A DOING task with commits of its own (beyond the main root's HEAD) is checked ag
 Exactly the format in `_FRAMEWORK.md`'s example:
 
 - Line 1: `ape: N tasks · O owner · D doing · W new · B blocked · R ready · K done 24h` (counts in section order).
-- Then sections in order OWNER, DOING, NEW, BLOCKED, READY, DONE 24h, CHECK; an empty section is omitted.
+- Then sections in order CHECK (first: it asks for action, and survives `ape | head`), OWNER, DOING, NEW, BLOCKED, READY, DONE 24h; an empty section is omitted.
 - Task line: two spaces, ID left-aligned width 4, space, kind width 5, space, `pN` (or two spaces if no pri), two spaces, title, then marks `[..]` joined by `;` inside one pair of brackets. Ask line: 7 spaces, `?`, ask.
 - Ask and DONE lines longer than 120 columns (runes, leading spaces included) are cut to 120: the first 119, trailing spaces dropped, then `…`. Task and CHECK lines are never cut.
 - Marks: OWNER: `needs owner` when it has no Ask line, and none when it does, then `doing` with a worktree; DOING: `Xm|Xh|Xd since commit` (from the last commit of its worktree's HEAD; `no commits` if none beyond the main root's HEAD), then `conflicts <main root's branch, or HEAD>: <files>` or, all regenerated, `conflicts <branch> in regenerated files only: <files>`; NEW: `triage`, `from <from>`; BLOCKED: `needs Tn Tm` listing the tasks that still exist, or, none left, all of them: `needs Tn Tm (gone)`; READY: `clashes Tn, Tm`, then `conflicts Tn: <files>` per task (by number), then `paused`. `<files>`: sorted, `,`-joined, the first 3 then `, +N more`.
 - Order within every section (OWNER included): pri ascending (none last), then number ascending (oldest first).
-- DONE 24h: commits in the ape repo from the last 24 h whose subject is `done(<ID>): <text>` or `drop(<ID>): <text>` (ID read as typed): two spaces, ID width 4, space, `done`/`drop` width 5, space, text. Newest first.
+- DONE 24h: commits in the ape repo from the last 24 h whose subject is `done(<ID>): <text>` or `drop(<ID>): <text>` (ID read as typed): two spaces, ID width 4, space, `done`/`drop` width 5, space, text. Newest first, the first 5, then `  +N more` if there are more (the header counts them all).
 - CHECK lines (two spaces each):
   - `Tn: <problem>`
   - `ape/Tn-slug: worktree without a task`
