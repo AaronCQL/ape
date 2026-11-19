@@ -122,7 +122,22 @@ func TestBuildClassify(t *testing.T) {
 				2: {Owner, []string{"doing"}},
 				3: {Ready, []string{"clashes T1, T2"}},
 			},
-			check: []string{"T2: quiet 4h (worktree, no commit)"},
+		},
+		{
+			name: "no quiet while blocked: the agent waits (T32)",
+			s: State{Tasks: []*task.Task{
+				ready(1, "status", "blocked", "needs", "T3"),
+				ready(2, "status", "blocked", "needs", "owner"),
+				ready(3),
+			}, Worktrees: []gitx.Worktree{wt("ape/T1-x"), wt("ape/T2-x"), wt("ape/T3-x")},
+				LastOwn: map[string]time.Time{"/wt/ape/T1-x": now.Add(-4 * time.Hour), "/wt/ape/T3-x": now.Add(-4 * time.Hour)},
+				Started: map[string]time.Time{"/wt/ape/T2-x": now.Add(-4 * time.Hour)}},
+			want: map[int]row{
+				1: {Doing, []string{"4h since commit"}},
+				2: {Owner, []string{"needs owner", "doing"}},
+				3: {Doing, []string{"4h since commit"}},
+			},
+			check: []string{"T3: quiet 4h (worktree, no commit)"},
 		},
 		{
 			name: "doing beats new",

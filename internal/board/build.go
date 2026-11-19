@@ -71,18 +71,20 @@ func Build(s State) Board {
 		paused[c.Num] = !doing && len(work.Branches) > 0
 		kind := get(c, "kind")
 		var since string // DOING's mark
+		// Quiet finds stalled agents; a blocked task's agent is waiting, as the board already shows.
+		waiting := status == "blocked" && needs != ""
 		if doing {
 			working[c.Num] = true
 			if last := s.LastOwn[live.Path]; last.IsZero() {
 				since = "no commits"
-				if start, ok := s.Started[live.Path]; ok && s.Now.Sub(start) >= quietAfter {
+				if start, ok := s.Started[live.Path]; ok && !waiting && s.Now.Sub(start) >= quietAfter {
 					taskChecks = append(taskChecks, fmt.Sprintf("%s: quiet %s (no commits since start)",
 						task.ID(c.Num), age(s.Now.Sub(start))))
 				}
 			} else {
 				d := s.Now.Sub(last)
 				since = age(d) + " since commit"
-				if d >= quietAfter {
+				if !waiting && d >= quietAfter {
 					taskChecks = append(taskChecks, fmt.Sprintf("%s: quiet %s (worktree, no commit)", task.ID(c.Num), age(d)))
 				}
 			}

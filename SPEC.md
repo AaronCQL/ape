@@ -80,7 +80,7 @@ Exactly the format in `_FRAMEWORK.md`'s example:
   - `Tn: <problem>`
   - `ape/Tn-slug: worktree without a task`
   - `ape/Tn-slug: branch without a task`
-  - for a task with a worktree (OWNER included), `Tn: quiet 4h (worktree, no commit)` 3 h after its last own commit, or with none `Tn: quiet 4h (no commits since start)` 3 h after the worktree's creation (the mtime of `commondir` in its git dir)
+  - for a task with a worktree (OWNER included) that isn't blocked (status blocked with needs: its agent waits), `Tn: quiet 4h (worktree, no commit)` 3 h after its last own commit, or with none `Tn: quiet 4h (no commits since start)` 3 h after the worktree's creation (the mtime of `commondir` in its git dir)
   - the branch and worktree lines of "Task's branch and worktree"
   - per task a blocked task needs that's gone and whose newest `done(Tm)`/`drop(Tm)` commit in the ape repo (ID as typed; one `git log --grep` for all of them) is a drop: `Tn: needs Tm, dropped; ape set Tn needs=… (what replaces it), or drop Tn`; every task it needs gone, none dropped: `Tn: needs Tm Tk: all done; ape set Tn status=ready needs=`
   - `_FRAMEWORK.md: outdated; run ape init`
