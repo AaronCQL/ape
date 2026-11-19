@@ -53,8 +53,9 @@ ape done <id> "<summary>" [--code <sha>]   delete task, worktree, branch (must b
                              out of their needs; none left + blocked → ready; prints `released: T7 T8`
 ape drop <id> "<reason>"     delete task, worktree, branch; commit `drop(Tn): <reason>`; unmerged work → --force.
                              What needed it stays blocked; CHECK `T7: needs Tn, dropped` → point it elsewhere
-ape commit -m "<msg>" <paths…>   commit exactly these ape/ files (new, edited, deleted); prints the sha. A path not
-                             inside ape/ from the cwd is read as ape/-relative (`tasks/…`, `PROJECT.md`)
+ape commit -m "<msg>" <paths…>   commit exactly these ape/ files (new, edited, deleted; a directory = its changed
+                             files); prints the sha. A path not inside ape/ from the cwd is read as ape/-relative
+                             (`tasks/…`, `PROJECT.md`)
 ape init                     in the main worktree root: creates ape/ + T1 (set it up from what the repo has),
                              ignores it, points AGENTS.md (+ CLAUDE.md) at it. Rerun: rewrites this file
 ```

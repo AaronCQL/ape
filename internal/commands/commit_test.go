@@ -99,6 +99,39 @@ func TestCommitPrefersApe(t *testing.T) {
 	wantCode(t, env, ExitUsage, Commit, "-m", "x", "ref/gone.md")
 }
 
+// A directory is the files under it that differ from HEAD: new (in new subdirectories too), edited, deleted;
+// ignored ones and other directories' changes stay out (T36).
+func TestCommitDirectory(t *testing.T) {
+	env := project(t)
+	ape := env.ApeDir
+	writeFile(t, filepath.Join(ape, "ref", "audit", "old.md"), "old\n")
+	writeFile(t, filepath.Join(ape, "ref", "audit", "gone.md"), "gone\n")
+	writeFile(t, filepath.Join(ape, "ref", "kept", "k.md"), "k\n")
+	writeFile(t, filepath.Join(ape, "ref", "dead", "d.md"), "d\n")
+	mustGit(t, ape, "add", "ref")
+	mustGit(t, ape, "commit", "-q", "-m", "ref")
+	writeFile(t, filepath.Join(ape, "ref", "audit", "old.md"), "changed\n")
+	os.Remove(filepath.Join(ape, "ref", "audit", "gone.md"))
+	writeFile(t, filepath.Join(ape, "ref", "audit", "new", "n*.md"), "n\n")
+	writeFile(t, filepath.Join(ape, "ref", "audit", "x.log"), "ignored\n")
+	writeFile(t, filepath.Join(ape, ".gitignore"), "*.log\n")
+	writeFile(t, filepath.Join(ape, "ref", "other.md"), "not named\n")
+	os.RemoveAll(filepath.Join(ape, "ref", "dead"))
+
+	env.Cwd = env.MainRoot
+	run(t, env, Commit, "-m", "audit", "ape/ref/audit/", "ref/kept", "ref/dead")
+	got := mustGit(t, ape, "show", "--name-status", "--format=%s", "HEAD")
+	if want := "audit\n\nD\tref/audit/gone.md\nA\tref/audit/new/n*.md\nM\tref/audit/old.md\nD\tref/dead/d.md"; got != want {
+		t.Fatalf("HEAD:\n%s\nwant:\n%s", got, want)
+	}
+	if st := mustGit(t, ape, "status", "--porcelain"); st != "?? .gitignore\n?? ref/other.md" {
+		t.Fatalf("status:\n%s", st)
+	}
+	if out := run(t, env, Commit, "-m", "again", "ref/audit", "ref/kept"); out != "nothing to commit\n" {
+		t.Fatalf("nothing to commit printed %q", out)
+	}
+}
+
 func TestCommitRefuses(t *testing.T) {
 	env := project(t)
 	writeFile(t, filepath.Join(env.ApeDir, "ref", "a.md"), "a\n")
@@ -111,7 +144,6 @@ func TestCommitRefuses(t *testing.T) {
 		{"-m", "x", "ape/../README"},            // the same, spelt through ape/
 		{"-m", "x", filepath.Dir(env.MainRoot)}, // further out
 		{"-m", "x", "ape"},                      // the ape dir itself
-		{"-m", "x", "ape/ref"},                  // a directory
 		{"-m", "x", "ape/.git/config"},          // ape's git dir
 		{"-m", "x", "ape/ref/a.md", "nope/b"},   // one bad path refuses all
 	} {
