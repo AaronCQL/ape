@@ -31,6 +31,7 @@ from: <who>@<sha> | <tracker ref>          # where it came from, if outside ape 
 ## Progress   handoff: done, half-built + where, not started, measurements, failing; notes for other tasks
 ```
 - ID `Tn` (T12): its file `tasks/T12-slug.md`, branch `ape/T12-slug`; cite as T12, like Dn. Numbers never reused.
+  To the owner (reports, Asks, chat): ID + what it is, never bare: "T31 (`needs` can't hold owner + Tn)".
 - A report (bug, request) = a `status: new` task: what happened, repro, workaround; triage makes it ready. Before
   `ape new`, grep ape/tasks for a duplicate.
 - Labels via `ape set`; the `#` comments are docs, not allowed in files.
