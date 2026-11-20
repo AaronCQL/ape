@@ -28,7 +28,7 @@ A basic loop can look like this:
 
 Or, use this even simpler prompt: `I'm going to sleep, do everything that doesn't require me`.
 
-The workflow is really just to talk to your main agent:
+You never need to look at the board yourself. The workflow is really just to talk to your main agent:
 
 - `What pending tasks are there?`
 - `What needs my decision?`
@@ -82,11 +82,11 @@ If you're still babysitting a single agent by itself, it's still a decent way to
 
 APE is basically a kanban board for agents, kept locally in the language they understand best: *plaintext*.
 
-- **Private and local by default**: plans and tasks live in their own git repo, ignored by your code repo, so your secret plans never get committed.
+- **Private and local-only**: plans and tasks live in their own git repo, ignored by your code repo, so your secret plans never get committed.
 - **Focused on the now**: no changelogs, session logs, or "what was done" to bloat up context; the past lives in git, searched only when needed.
 - **Built for parallel work**: works even if orchestrators and subagents cannot directly communicate; all actions done are atomic.
 - **Works in a team**: each person's board is their own; shared rules stay in the repo and the shared backlog in your issue tracker, so teammates without APE lose nothing.
-- **Just plain old plaintext**: no complex APIs, servers, databases or MCPs to manage.
+- **Just plain old plaintext**: no complex dashboards, APIs, MCPs, or databases to manage.
 
 ## License
 
